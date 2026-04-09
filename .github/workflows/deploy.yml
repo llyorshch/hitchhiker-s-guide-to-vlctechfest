@@ -35,7 +35,7 @@ jobs:
       - name: Export slides to HTML
         run: |
           mkdir _site
-          presenterm --export-html slides.md --output _site/index.html
+          script -q -c "presenterm --export-html slides.md --output _site/index.html" /dev/null
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
