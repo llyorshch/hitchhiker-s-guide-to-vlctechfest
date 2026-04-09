@@ -34,8 +34,9 @@ jobs:
 
       - name: Export slides to HTML
         run: |
+          sudo apt-get install -y expect
           mkdir _site
-          script -q -c "presenterm --export-html slides.md --output _site/index.html" /dev/null
+          unbuffer presenterm --export-html slides.md --output _site/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
