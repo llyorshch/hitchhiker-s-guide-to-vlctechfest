@@ -21,14 +21,14 @@ jobs:
       image: archlinux:base
     steps:
       - name: Install dependencies
-        run: pacman -Syu --noconfirm presenterm git
+        run: pacman -Syu --noconfirm presenterm git expect
 
       - uses: actions/checkout@v4
 
       - name: Export slides to HTML
         run: |
           mkdir _site
-          presenterm --export-html slides.md --output _site/index.html
+          unbuffer presenterm --export-html slides.md --output _site/index.html < /dev/null
 
       - uses: actions/upload-artifact@v4
         with:
