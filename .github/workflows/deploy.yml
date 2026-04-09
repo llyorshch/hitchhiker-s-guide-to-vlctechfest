@@ -34,9 +34,12 @@ jobs:
 
       - name: Export slides to HTML
         run: |
-          sudo apt-get install -y expect
           mkdir _site
-          unbuffer presenterm --export-html slides.md --output _site/index.html
+          python3 -c "
+          import pty, sys, os
+          status = pty.spawn(['presenterm', '--export-html', 'slides.md', '--output', '_site/index.html'])
+          sys.exit(os.waitstatus_to_exitcode(status))
+          "
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
