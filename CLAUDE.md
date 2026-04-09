@@ -250,3 +250,18 @@ Define notes in slides:
 presenterm --export-pdf slides.md    # requires weasyprint
 presenterm --export-html slides.md   # no extra dependencies
 ```
+
+## Publishing to GitHub Pages
+
+presenterm requires a real TTY to export, so this must be done locally (it cannot run in CI).
+
+1. Export the slides from a terminal (not from within Claude Code):
+   ```bash
+   presenterm --export-html slides.md --output public/index.html
+   ```
+
+2. Commit and push the `public/` folder.
+
+3. In the GitHub repo, go to **Settings → Pages** and set:
+   - **Source**: Deploy from a branch
+   - **Branch**: `master`, folder: `/public`
