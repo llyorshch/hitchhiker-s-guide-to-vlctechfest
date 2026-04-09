@@ -15,54 +15,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux:base
     steps:
-      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm presenterm git
 
-      - name: Install presenterm
-        run: |
-          VERSION=$(curl -s https://api.github.com/repos/mfontanini/presenterm/releases/latest \
-            | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
-          curl -L --fail \
-            "https://github.com/mfontanini/presenterm/releases/latest/download/presenterm-${VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-            | tar xz --strip-components=1
-          sudo mv presenterm /usr/local/bin/
+      - uses: actions/checkout@v4
 
       - name: Export slides to HTML
         run: |
           mkdir _site
-          python3 <<'PYEOF'
-          import subprocess, os, pty
+          presenterm --export-html slides.md --output _site/index.html
 
-          master, slave = pty.openpty()
-          proc = subprocess.Popen(
-              ['presenterm', '--export-html', 'slides.md', '--output', '_site/index.html'],
-              stdin=slave, stdout=slave, stderr=slave,
-              close_fds=True
-          )
-          os.close(slave)
-          # Drain output so the child doesn't block on a full PTY buffer
-          while True:
-              try:
-                  data = os.read(master, 4096)
-                  if not data:
-                      break
-              except OSError:
-                  break
-          proc.wait()
-          os.close(master)
-          raise SystemExit(proc.returncode)
-          PYEOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: html-site
+          path: _site
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v4
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/download-artifact@v4
+        with:
+          name: html-site
+          path: _site
+
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
