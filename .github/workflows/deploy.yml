@@ -1,0 +1,50 @@
+name: Deploy slides to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install presenterm
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/mfontanini/presenterm/releases/latest \
+            | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+          curl -L --fail \
+            "https://github.com/mfontanini/presenterm/releases/latest/download/presenterm-${VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+            | tar xz --strip-components=1
+          sudo mv presenterm /usr/local/bin/
+
+      - name: Export slides to HTML
+        run: |
+          mkdir _site
+          presenterm --export-html slides.md --output _site/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
