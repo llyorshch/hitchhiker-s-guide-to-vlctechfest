@@ -257,11 +257,11 @@ presenterm requires a real TTY to export, so this must be done locally (it canno
 
 1. Export the slides from a terminal (not from within Claude Code):
    ```bash
-   presenterm --export-html slides.md --output public/index.html
+   presenterm --export-html slides.md --output docs/index.html
    ```
 
-2. Commit and push the `public/` folder.
+2. Commit and push the `docs/` folder.
 
 3. In the GitHub repo, go to **Settings → Pages** and set:
    - **Source**: Deploy from a branch
-   - **Branch**: `master`, folder: `/public`
+   - **Branch**: `master`, folder: `/docs`
