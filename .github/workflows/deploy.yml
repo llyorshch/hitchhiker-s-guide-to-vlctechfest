@@ -35,11 +35,28 @@ jobs:
       - name: Export slides to HTML
         run: |
           mkdir _site
-          python3 -c "
-          import pty, sys, os
-          status = pty.spawn(['presenterm', '--export-html', 'slides.md', '--output', '_site/index.html'])
-          sys.exit(os.waitstatus_to_exitcode(status))
-          "
+          python3 <<'PYEOF'
+          import subprocess, os, pty
+
+          master, slave = pty.openpty()
+          proc = subprocess.Popen(
+              ['presenterm', '--export-html', 'slides.md', '--output', '_site/index.html'],
+              stdin=slave, stdout=slave, stderr=slave,
+              close_fds=True
+          )
+          os.close(slave)
+          # Drain output so the child doesn't block on a full PTY buffer
+          while True:
+              try:
+                  data = os.read(master, 4096)
+                  if not data:
+                      break
+              except OSError:
+                  break
+          proc.wait()
+          os.close(master)
+          raise SystemExit(proc.returncode)
+          PYEOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
